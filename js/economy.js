@@ -6,8 +6,8 @@ const Economy = {
   AD_SECONDS: 8,
   REWARD: { 16: 8, 36: 14, 64: 22 },
   REPEAT: { 16: 3, 36: 5, 64: 8 },
-  JIGSAW_REWARD: { 36: 18, 64: 26, 100: 34 },
-  JIGSAW_REPEAT: { 36: 6, 64: 10, 100: 12 },
+  JIGSAW_REWARD: { 16: 12, 36: 18, 100: 34 },
+  JIGSAW_REPEAT: { 16: 4, 36: 6, 100: 12 },
   FIRST_BONUS: 8,
   SIGN: [
     { day: 1, coins: 12, hint: 0, double: false, exclusive: false, label: "12 金币" },

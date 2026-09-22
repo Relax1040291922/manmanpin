@@ -17,11 +17,11 @@ let play = {
 let crop = { img: null, scale: 1, x: 0, y: 0, dragging: false, lastX: 0, lastY: 0 };
 
 const STAGES = [
-  { i: 0, grid: 4, shape: "square", pieces: 16, name: "第一关", undos: 5, nextLine: "再难一点，拼 36 块" },
-  { i: 1, grid: 6, shape: "square", pieces: 36, name: "第二关", undos: 6, nextLine: "再碎一回，拼 64 块" },
-  { i: 2, grid: 8, shape: "square", pieces: 64, name: "第三关", undos: 8, nextLine: "换成咬合的，36 块" },
-  { i: 3, grid: 6, shape: "jigsaw", pieces: 36, name: "第四关", undos: 8, nextLine: "咬合再密一点，64 块" },
-  { i: 4, grid: 8, shape: "jigsaw", pieces: 64, name: "第五关", undos: 10, nextLine: "最后一关，100 块" },
+  { i: 0, grid: 4, shape: "square", pieces: 16, name: "第一关", undos: 5, nextLine: "换成咬合的，还是 16 块" },
+  { i: 1, grid: 4, shape: "jigsaw", pieces: 16, name: "第二关", undos: 6, nextLine: "再难一点，拼 36 块" },
+  { i: 2, grid: 6, shape: "square", pieces: 36, name: "第三关", undos: 6, nextLine: "换成咬合的，36 块" },
+  { i: 3, grid: 6, shape: "jigsaw", pieces: 36, name: "第四关", undos: 8, nextLine: "再碎一回，拼 64 块" },
+  { i: 4, grid: 8, shape: "square", pieces: 64, name: "第五关", undos: 8, nextLine: "最后一关，咬合 100 块" },
   { i: 5, grid: 10, shape: "jigsaw", pieces: 100, name: "第六关", undos: 12, nextLine: null },
 ];
 
