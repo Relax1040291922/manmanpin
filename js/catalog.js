@@ -2,6 +2,7 @@ const CAT_PINNED = [
   { id: "beauty", name: "美女" },
   { id: "handsome", name: "帅哥" },
   { id: "anime", name: "漫画" },
+  { id: "local", name: "本地" },
 ];
 const CAT_MORE = [
   { id: "all", name: "全部" },

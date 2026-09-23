@@ -421,7 +421,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .cats button {
   flex: 0 0 auto;
   min-height: 32px;
-  padding: 0 12px;
+  padding: 0 9px;
   border-radius: 999px;
   border: 1px solid var(--line);
   background: #fff;
@@ -734,6 +734,14 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 }
 .slot.magnet {
   background: rgba(255, 210, 80, 0.5);
+  box-shadow: inset 0 0 0 2px #e8a020;
+}
+.board-wrap.jigsaw .slot {
+  border: 0;
+  background: transparent;
+}
+.board-wrap.jigsaw .slot.magnet {
+  background: rgba(255, 210, 80, 0.36);
   box-shadow: inset 0 0 0 2px #e8a020;
 }
 .piece {

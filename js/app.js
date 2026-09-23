@@ -13,16 +13,17 @@ let play = {
   peeks: 2,
   undos: 5,
   uploadUrl: "",
+  localUrl: "",
 };
 let crop = { img: null, scale: 1, x: 0, y: 0, dragging: false, lastX: 0, lastY: 0 };
 
 const STAGES = [
-  { i: 0, grid: 4, shape: "square", pieces: 16, name: "第一关", undos: 5, nextLine: "换成咬合的，还是 16 块" },
-  { i: 1, grid: 4, shape: "jigsaw", pieces: 16, name: "第二关", undos: 6, nextLine: "再难一点，拼 36 块" },
-  { i: 2, grid: 6, shape: "square", pieces: 36, name: "第三关", undos: 6, nextLine: "换成咬合的，36 块" },
-  { i: 3, grid: 6, shape: "jigsaw", pieces: 36, name: "第四关", undos: 8, nextLine: "再碎一回，拼 64 块" },
-  { i: 4, grid: 8, shape: "square", pieces: 64, name: "第五关", undos: 8, nextLine: "最后一关，咬合 100 块" },
-  { i: 5, grid: 10, shape: "jigsaw", pieces: 100, name: "第六关", undos: 12, nextLine: null },
+  { i: 0, grid: 4, shape: "square", pieces: 16, name: "第一关", undos: 5, prelock: 0, nextLine: "换成咬合的，还是 16 块" },
+  { i: 1, grid: 4, shape: "jigsaw", pieces: 16, name: "第二关", undos: 6, prelock: 1, nextLine: "再难一点，拼 36 块" },
+  { i: 2, grid: 6, shape: "square", pieces: 36, name: "第三关", undos: 6, prelock: 0, nextLine: "换成咬合的，36 块" },
+  { i: 3, grid: 6, shape: "jigsaw", pieces: 36, name: "第四关", undos: 8, prelock: 2, nextLine: "再碎一回，拼 64 块" },
+  { i: 4, grid: 8, shape: "square", pieces: 64, name: "第五关", undos: 8, prelock: 0, nextLine: "最后一关，咬合 100 块" },
+  { i: 5, grid: 10, shape: "jigsaw", pieces: 100, name: "第六关", undos: 12, prelock: 3, nextLine: null },
 ];
 
 function migrateCleared(raw) {
@@ -347,8 +348,18 @@ function renderGallery() {
     };
     pop.appendChild(b);
   });
+  const hint = $("gallery-hint");
+  if (hint) hint.textContent = galleryCat === "local" ? "选一张手机里的图，不上传，只在这局拼" : "点一张就开始拼";
   const box = $("gallery-grid");
   box.innerHTML = "";
+  if (galleryCat === "local") {
+    const pick = document.createElement("button");
+    pick.className = "upload-tile";
+    pick.innerHTML = "<strong>选一张本地图</strong><span>不上传，自动裁成方形后开拼</span>";
+    pick.onclick = () => $("file-local").click();
+    box.appendChild(pick);
+    return;
+  }
   if (galleryCat === "all" || galleryCat === "mine") {
     const upload = document.createElement("button");
     upload.className = "upload-tile";
@@ -460,6 +471,7 @@ function startPlay(image, stageArg) {
       grid: play.grid,
       shape: stage.shape,
       seed: image.id || image.src,
+      prelock: stage.prelock || 0,
       onSfx: (name) => Sfx.play(name),
       onChange: (p) => paintPlayStatus(stage, p),
       onJudge: (kind, p) => {
@@ -494,7 +506,7 @@ function finishPlay() {
     shape: stage.shape,
   });
   recordClear(play.image, stage.i);
-  if (!state.collection.some((c) => c.id === play.image.id && c.src === play.image.src)) {
+  if (!play.image.ephemeral && !state.collection.some((c) => c.id === play.image.id && c.src === play.image.src)) {
     state.collection.push({
       id: play.image.id,
       name: play.image.name,
@@ -646,6 +658,59 @@ function renderSign() {
   $("signin-action").textContent = status.claimed ? "今日已领取" : `领取第 ${status.nextDay} 天`;
 }
 
+function playLocalFile(file) {
+  if (!file) return;
+  if (!/^image\/(jpeg|png|webp|jpg)/i.test(file.type) && !/\.(jpe?g|png|webp)$/i.test(file.name)) {
+    toast("只支持 jpg / png / webp");
+    return;
+  }
+  if (file.size > 8 * 1024 * 1024) {
+    toast("图片超过 8MB，换一张小一点的");
+    return;
+  }
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    const side = Math.min(img.width, img.height);
+    if (side < 320) {
+      toast("图片太小，换一张更清楚的");
+      URL.revokeObjectURL(url);
+      return;
+    }
+    const sx = (img.width - side) / 2;
+    const sy = (img.height - side) / 2;
+    const cvs = document.createElement("canvas");
+    cvs.width = 1024;
+    cvs.height = 1024;
+    cvs.getContext("2d").drawImage(img, sx, sy, side, side, 0, 0, 1024, 1024);
+    URL.revokeObjectURL(url);
+    const go = (src) => {
+      startPlay({
+        id: "local-" + Date.now(),
+        name: (file.name || "本地图").replace(/\.[^.]+$/, "") || "本地图",
+        src,
+        cat: "local",
+        ephemeral: true,
+      });
+    };
+    if (cvs.toBlob) {
+      cvs.toBlob((blob) => {
+        if (!blob) return go(cvs.toDataURL("image/jpeg", 0.86));
+        if (play.localUrl) URL.revokeObjectURL(play.localUrl);
+        play.localUrl = URL.createObjectURL(blob);
+        go(play.localUrl);
+      }, "image/jpeg", 0.86);
+    } else {
+      go(cvs.toDataURL("image/jpeg", 0.86));
+    }
+  };
+  img.onerror = () => {
+    URL.revokeObjectURL(url);
+    toast("图片读失败，换一张试试");
+  };
+  img.src = url;
+}
+
 function onFile(file) {
   if (!file) return;
   if (!/^image\/(jpeg|png|webp|jpg)/i.test(file.type) && !/\.(jpe?g|png|webp)$/i.test(file.name)) {
@@ -734,6 +799,10 @@ function bind() {
     showScreen("home");
   };
   $("file").onchange = (e) => onFile(e.target.files[0]);
+  $("file-local").onchange = (e) => {
+    playLocalFile(e.target.files[0]);
+    e.target.value = "";
+  };
   $("home-gallery").onclick = goGallery;
   $("btn-hint").onclick = useHint;
   $("btn-undo").onclick = useUndo;

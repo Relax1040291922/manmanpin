@@ -66,11 +66,27 @@ const Puzzle = (() => {
     syncTrayArrows();
     onChange(progress());
     clearTimeout(create._intro);
+    const prelock = shape === "jigsaw" ? Math.max(0, opts.prelock || 0) : 0;
     create._intro = setTimeout(() => {
       ghostEl.classList.remove("reveal");
+      lockGivenPieces(prelock);
       renderTray();
       trayEl.classList.add("deal-in");
+      onChange(progress());
     }, 720);
+  }
+
+  function lockGivenPieces(n) {
+    if (!n) return;
+    const picks = [
+      pieces.find((p) => p.row === 0 && p.col === 0),
+      pieces.find((p) => p.row === grid - 1 && p.col === grid - 1),
+      pieces.find((p) => p.row === 0 && p.col === grid - 1),
+    ].filter((p) => p && p.state !== "locked");
+    picks.slice(0, n).forEach((p) => {
+      p.given = true;
+      lockPiece(p, true);
+    });
   }
 
   function hash32(str) {

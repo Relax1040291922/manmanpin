@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>拼个帅哥美女</title>
-  <link rel="stylesheet" href="css/app.css?v=20">
+  <link rel="stylesheet" href="css/app.css?v=21">
 </head>
 <body>
   <aside class="desktop-note">
@@ -69,7 +69,7 @@
           </div>
           <div class="cats-panel" id="cats-pop" hidden></div>
         </div>
-        <p class="hint-text" style="margin:12px 0 8px">点一张就开始拼</p>
+        <p class="hint-text" style="margin:12px 0 8px" id="gallery-hint">点一张就开始拼</p>
         <div class="grid" id="gallery-grid"></div>
       </section>
 
@@ -220,13 +220,14 @@
     </div>
     <div class="toast" id="toast"></div>
     <input id="file" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+    <input id="file-local" type="file" accept="image/jpeg,image/png,image/webp,image/*" hidden>
   </div>
 
   <script src="js/store.js?v=17"></script>
   <script src="js/economy.js?v=20"></script>
   <script src="js/sfx.js?v=17"></script>
-  <script src="js/puzzle.js?v=19"></script>
-  <script src="js/catalog.js?v=17"></script>
-  <script src="js/app.js?v=20"></script>
+  <script src="js/puzzle.js?v=21"></script>
+  <script src="js/catalog.js?v=21"></script>
+  <script src="js/app.js?v=21"></script>
 </body>
 </html>
