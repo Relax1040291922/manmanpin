@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>拼个帅哥美女</title>
-  <link rel="stylesheet" href="css/app.css?v=21">
+  <link rel="stylesheet" href="css/app.css?v=22">
 </head>
 <body>
   <aside class="desktop-note">
@@ -134,7 +134,7 @@
             <span id="play-progress">第一关 · 对了 0/16</span>
             <span class="play-meta">
               <span id="play-hints">提示 0</span>
-              <button class="sound-btn" id="btn-sound" type="button" aria-label="音效开关">♪</button>
+              <button class="sound-btn" id="btn-sound" type="button" aria-label="音效开关">音</button>
             </span>
           </div>
         </div>
@@ -145,18 +145,18 @@
           <button class="btn btn-ghost" id="btn-restart">重来</button>
         </div>
         <p class="play-judge" id="play-judge" hidden></p>
+        <div class="table">
+          <div class="board-wrap" id="board">
+            <div class="board-ghost" id="ghost"></div>
+            <div class="board-grid"></div>
+          </div>
+        </div>
         <div class="tray-row" id="tray-row">
           <button class="tray-arrow" id="tray-prev" type="button" aria-label="向左看">‹</button>
           <div class="tray-viewport" id="tray-viewport">
             <div class="tray" id="tray"></div>
           </div>
           <button class="tray-arrow" id="tray-next" type="button" aria-label="向右看">›</button>
-        </div>
-        <div class="table">
-          <div class="board-wrap" id="board">
-            <div class="board-ghost" id="ghost"></div>
-            <div class="board-grid"></div>
-          </div>
         </div>
       </section>
     </div>
@@ -168,10 +168,14 @@
     </nav>
 
     <div class="overlay" id="overlay">
-      <div class="sheet" id="sheet-result">
+      <div class="sheet clear-card" id="sheet-result">
+        <div class="clear-burst" id="result-burst" aria-hidden="true"></div>
+        <div class="clear-photo" id="result-photo"></div>
+        <p class="clear-kicker" id="result-kicker">过关</p>
         <h3 id="result-title">拼好了</h3>
         <p id="result-desc"></p>
-        <div class="reward" id="result-reward"></div>
+        <div class="clear-gold" id="result-reward"></div>
+        <div class="clear-bar" id="result-nextbar-wrap" hidden><i id="result-nextbar"></i></div>
         <p id="result-auto" hidden>马上打散…</p>
         <button class="btn btn-primary" id="result-next">碎成 36 块</button>
         <button class="btn btn-ghost" id="result-more" style="margin-top:8px">拼下一张</button>
@@ -225,9 +229,9 @@
 
   <script src="js/store.js?v=17"></script>
   <script src="js/economy.js?v=20"></script>
-  <script src="js/sfx.js?v=17"></script>
-  <script src="js/puzzle.js?v=21"></script>
+  <script src="js/sfx.js?v=22"></script>
+  <script src="js/puzzle.js?v=22"></script>
   <script src="js/catalog.js?v=21"></script>
-  <script src="js/app.js?v=21"></script>
+  <script src="js/app.js?v=22"></script>
 </body>
 </html>

@@ -425,7 +425,7 @@ function renderMe() {
 function paintSoundBtn() {
   const btn = $("btn-sound");
   if (!btn) return;
-  btn.textContent = "♪";
+  btn.textContent = state.soundOn ? "音" : "静";
   btn.classList.toggle("off", !state.soundOn);
   btn.setAttribute("aria-label", state.soundOn ? "关闭音效" : "打开音效");
 }
@@ -437,7 +437,7 @@ function toggleSound() {
   paintSoundBtn();
   if (state.soundOn) {
     Sfx.unlock();
-    Sfx.play("peek");
+    Sfx.play("lock");
   }
 }
 function startPlay(image, stageArg) {
@@ -522,7 +522,8 @@ function finishPlay() {
     reward.doubled ? "双倍金币卡已生效" : "",
     reward.capped ? "已触达今日拼图金币上限" : `今日拼图金币还剩 ${reward.roomLeft}`,
   ].filter(Boolean);
-  $("result-reward").innerHTML = `获得 <em>${reward.gain}</em> 金币<br>${lines.join("<br>")}`;
+  $("result-photo").style.backgroundImage = play.image.src ? `url("${play.image.src}")` : "";
+  paintClearBurst();
   const nextImg = nextImageAfter(play.image);
   $("result-more").textContent = `拼下一张 · ${nextImg.name}`;
   $("result-more").className = "btn btn-ghost";
@@ -531,26 +532,46 @@ function finishPlay() {
   $("result-next").style.display = "none";
   $("result-auto").hidden = true;
   $("sheet-result").classList.remove("auto-next");
+  $("result-nextbar-wrap").hidden = true;
   if (next) {
     play.autoNext = true;
-    $("result-title").textContent = "拼好了";
+    $("result-kicker").textContent = `${stage.name} 过了`;
+    $("result-title").textContent = "漂亮";
     $("result-desc").textContent = stage.nextLine;
+    $("result-reward").innerHTML = `<em>+${reward.gain}</em><span>金币</span>`;
     $("result-again").textContent = "再拼本关";
     $("result-auto").hidden = false;
-    $("result-auto").textContent = "马上打散…";
+    $("result-auto").textContent = "下一关马上开始";
+    $("result-nextbar-wrap").hidden = false;
+    const bar = $("result-nextbar");
+    bar.style.animation = "none";
+    void bar.offsetWidth;
+    bar.style.animation = "";
     $("sheet-result").classList.add("auto-next");
     openSheet("result", true);
     clearTimeout(finishPlay._t);
-    finishPlay._t = setTimeout(() => shatterIntoNext(), 1600);
+    finishPlay._t = setTimeout(() => shatterIntoNext(), 2000);
   } else {
     play.autoNext = false;
-    $("result-title").textContent = "这张图通关了";
+    $("result-kicker").textContent = "通关";
+    $("result-title").textContent = "这张图拼完了";
     $("result-desc").textContent = `${play.image.name} · 六关 · ${$("play-time").textContent}`;
+    $("result-reward").innerHTML = `<em>+${reward.gain}</em><span>金币</span><small style="display:block;font-weight:400;margin-top:4px">${lines[0] || ""}</small>`;
     $("result-more").className = "btn btn-primary";
     $("result-more").style.marginTop = "0";
     $("result-again").textContent = "从第一关再来";
-    openSheet("result");
+    openSheet("result", true);
   }
+}
+
+function paintClearBurst() {
+  const box = $("result-burst");
+  if (!box) return;
+  const colors = ["#ff4b3e", "#ffb020", "#ff7a45", "#ffe08a", "#fff"];
+  box.innerHTML = Array.from({ length: 14 }, (_, i) => {
+    const r = Math.round((360 / 14) * i + (i % 2 ? 8 : -6));
+    return `<i style="--i:${i};--r:${r}deg;--dot:${colors[i % colors.length]}"></i>`;
+  }).join("");
 }
 
 function shatterIntoNext() {
@@ -569,7 +590,7 @@ function shatterIntoNext() {
     el.style.setProperty("--sr", Math.round(Math.random() * 48 - 24) + "deg");
   });
   board.classList.add("shattering");
-  Sfx.play("hint");
+  Sfx.play("scatter");
   clearTimeout(shatterIntoNext._t);
   shatterIntoNext._t = setTimeout(() => {
     board.classList.remove("shattering");
@@ -926,7 +947,7 @@ function boot() {
   startSplash();
   paintTopbarCollage();
   Sfx.setEnabled(state.soundOn);
-  document.addEventListener("pointerdown", () => Sfx.unlock(), { once: true });
+  document.addEventListener("pointerdown", () => Sfx.unlock());
   renderWallet();
   showScreen("home");
   $("play-hints").textContent = `提示 ${state.hints}`;

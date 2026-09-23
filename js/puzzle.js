@@ -17,6 +17,7 @@ const Puzzle = (() => {
   let peekTimer = 0;
   let completed = false;
   let drag = null;
+  let combo = 0;
 
   function tabPad() {
     return shape === "jigsaw" ? slotSize * TAB : 0;
@@ -40,6 +41,7 @@ const Puzzle = (() => {
     onJudge = opts.onJudge || (() => {});
     history = [];
     completed = false;
+    combo = 0;
     slotSize = boardEl.clientWidth / grid;
     jigsawEdges = shape === "jigsaw" ? buildJigsaw(grid, opts.seed || imageUrl) : null;
     ghostEl.style.backgroundImage = `url("${imageUrl}")`;
@@ -73,6 +75,7 @@ const Puzzle = (() => {
       renderTray();
       trayEl.classList.add("deal-in");
       onChange(progress());
+      onSfx("deal");
     }, 720);
   }
 
@@ -423,7 +426,10 @@ const Puzzle = (() => {
     piece.el.classList.remove("just-in");
     void piece.el.offsetWidth;
     piece.el.classList.add("just-in");
-    if (!quiet) onSfx("lock");
+    if (!quiet) {
+      combo += 1;
+      onSfx(combo >= 3 ? "combo" : "lock");
+    }
   }
 
   function seatPiece(piece, row, col, quiet) {
@@ -436,7 +442,10 @@ const Puzzle = (() => {
     piece.el.classList.remove("just-wrong");
     void piece.el.offsetWidth;
     piece.el.classList.add("just-wrong");
-    if (!quiet) onSfx("seat");
+    if (!quiet) {
+      combo = 0;
+      onSfx("seat");
+    }
   }
 
   function placeOnBoard(piece, row, col) {
