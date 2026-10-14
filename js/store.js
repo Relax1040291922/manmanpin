@@ -16,6 +16,7 @@ const Store = (() => {
     uploads: [],
     stages: {},
     soundOn: true,
+    sfxOn: true,
     musicOn: false,
   });
 
@@ -49,6 +50,8 @@ const Store = (() => {
     if (!state || state.version !== 1) state = defaultState();
     if (!Array.isArray(state.uploads)) state.uploads = [];
     if (typeof state.soundOn !== "boolean") state.soundOn = true;
+    if (typeof state.sfxOn !== "boolean") state.sfxOn = state.soundOn !== false;
+    state.soundOn = state.sfxOn;
     if (typeof state.musicOn !== "boolean") state.musicOn = false;
     if (!state.stages || typeof state.stages !== "object") state.stages = {};
     if (state.daily.date !== today()) {

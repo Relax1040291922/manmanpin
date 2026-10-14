@@ -198,6 +198,8 @@ function showScreen(name) {
   if (name === "home") renderHome();
   if (name === "gallery") renderGallery();
   if (name === "me") renderMe();
+  if (name === "play") Sfx.startMusic();
+  else Sfx.stopMusic();
 }
 
 function renderHome() {
@@ -353,17 +355,22 @@ function renderMe() {
   }
 }
 
+function sfxEnabled() {
+  return state.sfxOn !== false && state.soundOn !== false;
+}
+
 function paintSoundBtn() {
+  const on = sfxEnabled();
   const btn = $("btn-sound");
   if (btn) {
-    btn.textContent = state.soundOn ? "音效 开" : "音效 关";
-    btn.classList.toggle("off", !state.soundOn);
-    btn.setAttribute("aria-label", state.soundOn ? "关闭音效" : "打开音效");
+    btn.textContent = on ? "音效 开" : "音效 关";
+    btn.classList.toggle("off", !on);
+    btn.setAttribute("aria-label", on ? "关闭音效" : "打开音效");
   }
   const me = $("me-sfx");
   if (me) {
-    me.textContent = state.soundOn ? "音效 开" : "音效 关";
-    me.classList.toggle("off", !state.soundOn);
+    me.textContent = on ? "音效 开" : "音效 关";
+    me.classList.toggle("off", !on);
   }
 }
 
@@ -375,20 +382,24 @@ function paintMusicBtn() {
 }
 
 function toggleSound() {
-  state.soundOn = !state.soundOn;
-  Sfx.setEnabled(state.soundOn);
+  const next = !sfxEnabled();
+  state.sfxOn = next;
+  state.soundOn = next;
+  Sfx.setEnabled(next);
   Store.save(state);
   paintSoundBtn();
-  if (state.soundOn) {
-    Sfx.unlock();
-    Sfx.play("lock");
-  }
+  Sfx.unlock();
+  if (next) Sfx.play("lock");
 }
 
 function toggleMusic() {
   state.musicOn = !state.musicOn;
+  Sfx.setMusicEnabled(state.musicOn);
   Store.save(state);
   paintMusicBtn();
+  Sfx.unlock();
+  if (state.musicOn && $("screen-play").classList.contains("active")) Sfx.startMusic();
+  else Sfx.stopMusic();
 }
 function startPlay(image, stageArg) {
   cancelAutoNext();
@@ -895,6 +906,9 @@ function bind() {
   $("reset-data").onclick = () => {
     if (!confirm("清空本地进度？")) return;
     state = Store.reset();
+    Sfx.setEnabled(sfxEnabled());
+    Sfx.setMusicEnabled(false);
+    Sfx.stopMusic();
     renderWallet();
     showScreen("me");
     toast("已重置");
@@ -910,7 +924,9 @@ function bind() {
 function boot() {
   bind();
   startSplash();
-  Sfx.setEnabled(state.soundOn);
+  Sfx.load();
+  Sfx.setEnabled(sfxEnabled());
+  Sfx.setMusicEnabled(!!state.musicOn);
   document.addEventListener("pointerdown", () => Sfx.unlock());
   renderWallet();
   showScreen("home");

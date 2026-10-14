@@ -243,6 +243,12 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   border: 10px solid var(--wood-frame);
   box-shadow: inset 0 0 0 2px var(--wood-in), var(--shadow-2);
 }
+.cover-img,
+.thumb img,
+.splash-still img,
+.collection img {
+  filter: saturate(0.92) contrast(1.04);
+}
 .cover-img {
   width: 100%;
   height: 100%;
@@ -1060,6 +1066,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   box-shadow:
     inset 0 0 0 1px var(--wood-in),
     var(--shadow-1);
+  filter: saturate(0.92) contrast(1.04);
 }
 .clear-card.grand .clear-photo {
   width: 112px;
