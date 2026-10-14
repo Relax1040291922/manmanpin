@@ -104,7 +104,12 @@ function paintSplash() {
   const photo = $("splash-photo");
   if (!photo) return;
   const img = dailyImage() || IMAGES.find((x) => x.cat === "beauty") || IMAGES[0];
-  if (img) photo.src = img.src;
+  const skel = $("splash-skel");
+  if (!img) return;
+  if (skel) skel.hidden = false;
+  photo.onload = () => { if (skel) skel.hidden = true; };
+  photo.onerror = () => { if (skel) skel.hidden = true; };
+  photo.src = img.src;
 }
 
 function dismissSplash() {
@@ -144,6 +149,103 @@ function toastOnce(key, msg, kind) {
   toast(msg, kind);
 }
 
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const im = new Image();
+    im.onload = () => resolve(im);
+    im.onerror = () => reject(new Error("img"));
+    im.src = src;
+  });
+}
+
+function withBust(src) {
+  return src + (src.indexOf("?") >= 0 ? "&" : "?") + "r=" + Date.now();
+}
+
+function bindCoverImage(src) {
+  const cover = $("daily-img");
+  const wrap = $("home-cover");
+  const fail = $("cover-fail");
+  if (!cover || !wrap) return;
+  wrap.classList.add("is-loading");
+  wrap.classList.remove("is-fail");
+  if (fail) fail.hidden = true;
+  cover.onload = () => {
+    wrap.classList.remove("is-loading", "is-fail");
+    if (fail) fail.hidden = true;
+  };
+  cover.onerror = () => {
+    wrap.classList.remove("is-loading");
+    wrap.classList.add("is-fail");
+    if (fail) fail.hidden = false;
+  };
+  cover.src = src;
+  if (cover.complete && cover.naturalWidth) {
+    wrap.classList.remove("is-loading", "is-fail");
+    if (fail) fail.hidden = true;
+  }
+}
+
+function emptyState(title, sub, actionLabel, action) {
+  const el = document.createElement("div");
+  el.className = "empty";
+  el.style.gridColumn = "1 / -1";
+  const strong = document.createElement("strong");
+  strong.textContent = title;
+  el.appendChild(strong);
+  if (sub) {
+    const span = document.createElement("span");
+    span.textContent = sub;
+    el.appendChild(span);
+  }
+  if (actionLabel && action) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn btn-primary";
+    b.textContent = actionLabel;
+    b.onclick = action;
+    el.appendChild(b);
+  }
+  return el;
+}
+
+function animateCount(nodes, from, to, ms, prefix) {
+  const list = Array.from(nodes);
+  if (!list.length) return;
+  const pre = prefix || "";
+  if (from === to) {
+    list.forEach((n) => { n.textContent = pre + to; });
+    return;
+  }
+  const start = performance.now();
+  const duration = ms || 420;
+  const tick = (now) => {
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - (1 - t) * (1 - t);
+    const val = Math.round(from + (to - from) * eased);
+    list.forEach((n) => { n.textContent = pre + val; });
+    if (t < 1) requestAnimationFrame(tick);
+    else {
+      list.forEach((n) => {
+        n.textContent = pre + to;
+        n.classList.remove("num-pop");
+        void n.offsetWidth;
+        n.classList.add("num-pop");
+      });
+    }
+  };
+  requestAnimationFrame(tick);
+}
+
+function syncRotateHint() {
+  const hint = $("rotate-hint");
+  if (!hint) return;
+  const playing = $("screen-play") && $("screen-play").classList.contains("active");
+  const landscape = window.matchMedia("(orientation: landscape)").matches;
+  const mobile = window.matchMedia("(max-width: 820px)").matches;
+  hint.hidden = !(playing && landscape && mobile);
+}
+
 function paintPlayPips(stage) {
   const box = $("play-pips");
   if (!box || !stage) return;
@@ -172,8 +274,10 @@ function paintPlayMenu() {
   paintSoundBtn();
 }
 
-function renderWallet() {
-  document.querySelectorAll("[data-coins]").forEach((n) => { n.textContent = state.coins; });
+function renderWallet(opts) {
+  if (!opts || !opts.skipCoins) {
+    document.querySelectorAll("[data-coins]").forEach((n) => { n.textContent = state.coins; });
+  }
   document.querySelectorAll("[data-hints]").forEach((n) => { n.textContent = state.hints; });
 }
 
@@ -200,17 +304,13 @@ function showScreen(name) {
   if (name === "me") renderMe();
   if (name === "play") Sfx.startMusic();
   else Sfx.stopMusic();
+  syncRotateHint();
 }
 
 function renderHome() {
   const img = dailyImage() || IMAGES[0];
-  const cover = $("daily-img");
-  if (!img || !cover) return;
-  cover.onerror = () => {
-    $("daily-name").textContent = "今日图片加载失败";
-    $("daily-meta").textContent = "检查 assets 文件夹后刷新";
-  };
-  cover.src = img.src;
+  if (!img) return;
+  bindCoverImage(img.src);
   $("daily-name").textContent = img.name;
   const cat = (CATS.find((c) => c.id === img.cat) || {}).name || "";
   const cleared = clearedOf(img);
@@ -280,15 +380,20 @@ function renderGallery() {
     pop.appendChild(b);
   });
   const hint = $("gallery-hint");
-  if (hint) hint.textContent = galleryCat === "local" ? "只在这台设备玩，不上传" : "点一张就开始拼";
+  if (hint) {
+    hint.textContent = galleryCat === "local"
+      ? "还没选过本地图。只在这台设备玩，不上传。"
+      : "点一张就开始拼";
+  }
   const box = $("gallery-grid");
   box.innerHTML = "";
   if (galleryCat === "local") {
-    const pick = document.createElement("button");
-    pick.className = "upload-tile";
-    pick.innerHTML = "<strong>选一张本地图</strong><span>只在这台设备玩，不上传</span>";
-    pick.onclick = () => $("file-local").click();
-    box.appendChild(pick);
+    box.appendChild(emptyState(
+      "本地无图",
+      "从相册选一张，只在这台设备玩，不上传。",
+      "选一张本地图",
+      () => $("file-local").click()
+    ));
     return;
   }
   if (galleryCat === "all" || galleryCat === "mine") {
@@ -304,11 +409,21 @@ function renderGallery() {
     return img.cat === galleryCat;
   });
   if (!list.length && galleryCat === "mine") {
-    const empty = document.createElement("div");
-    empty.className = "empty";
-    empty.style.gridColumn = "1 / -1";
-    empty.innerHTML = "<strong>还没有自己的图</strong>上传一张，会出现在「我的」里";
-    box.appendChild(empty);
+    box.appendChild(emptyState(
+      "还没有自己的图",
+      "上传一张，会出现在「我的」里。",
+      "去上传",
+      () => $("file").click()
+    ));
+    return;
+  }
+  if (!list.length) {
+    box.appendChild(emptyState(
+      "这一类暂时空着",
+      "去今日封面开一局，或换个分类。",
+      "去今日",
+      () => document.querySelector('[data-tab="home"]').click()
+    ));
     return;
   }
   list.forEach((img) => {
@@ -320,10 +435,21 @@ function renderGallery() {
     }).join("");
     const btn = document.createElement("button");
     btn.className = "thumb";
-    btn.innerHTML = `<img src="${img.src}" alt="${img.name}"><p>${img.name}${img.exclusive ? " · 签到第7天" : ""}</p><div class="stage-pips">${pips}</div>${locked ? '<div class="lock">连续签到解锁</div>' : ""}`;
+    btn.innerHTML = `<span class="thumb-skel skel" aria-hidden="true"></span><img alt="${img.name}"><p>${img.name}${img.exclusive ? " · 签到第7天" : ""}</p><div class="stage-pips">${pips}</div>${locked ? '<div class="lock">连续签到解锁</div>' : ""}`;
+    const im = btn.querySelector("img");
+    im.onload = () => btn.classList.add("ready");
+    im.onerror = () => btn.classList.add("fail");
+    im.src = img.src;
+    if (im.complete && im.naturalWidth) btn.classList.add("ready");
+    else if (im.complete) btn.classList.add("fail");
     btn.onclick = () => {
       if (locked) {
         toast("签到满 7 天可解锁江南院");
+        return;
+      }
+      if (btn.classList.contains("fail")) {
+        btn.classList.remove("fail", "ready");
+        im.src = withBust(img.src);
         return;
       }
       startPlay(img);
@@ -401,7 +527,7 @@ function toggleMusic() {
   if (state.musicOn && $("screen-play").classList.contains("active")) Sfx.startMusic();
   else Sfx.stopMusic();
 }
-function startPlay(image, stageArg) {
+function startPlay(image, stageArg, opts) {
   cancelAutoNext();
   const stage = resolveStage(stageArg) || nextStageOf(image);
   play.image = image;
@@ -411,32 +537,49 @@ function startPlay(image, stageArg) {
   play.startedAt = Date.now();
   play.peeks = 2;
   play.undos = stage.undos;
+  play.loadGen = (play.loadGen || 0) + 1;
+  const gen = play.loadGen;
+  const bust = opts && opts.bust;
+  const src = bust ? withBust(image.src) : image.src;
   showScreen("play");
   paintPlayPips(stage);
   paintPlayMenu();
   $("play-progress").textContent = `0/${stage.pieces}`;
   $("board").classList.remove("shattering");
-  requestAnimationFrame(() => {
-    Puzzle.create({
-      board: $("board"),
-      tray: $("tray"),
-      ghost: $("ghost"),
-      imageUrl: image.src,
-      grid: play.grid,
-      shape: stage.shape,
-      seed: image.id || image.src,
-      prelock: stage.prelock || 0,
-      onSfx: (name) => Sfx.play(name),
-      onChange: (p) => paintPlayStatus(stage, p),
-      onJudge: (kind, p) => {
-        if (kind === "wrong") toast("没咬住", "warn");
-        if (kind === "board-full") toast(`还有 ${p.seated} 块没对`, "warn");
-        if (kind === "frozen") toastOnce("frozen", "放下就不能再挪");
-        if (kind === "fixed") toastOnce("fixed", "这块已经放对了");
-      },
-      onComplete: finishPlay,
+  $("board").classList.add("is-loading");
+  const fail = $("play-fail");
+  if (fail) fail.hidden = true;
+  Puzzle.destroy();
+  loadImage(src).then(() => {
+    if (gen !== play.loadGen) return;
+    $("board").classList.remove("is-loading");
+    requestAnimationFrame(() => {
+      if (gen !== play.loadGen) return;
+      Puzzle.create({
+        board: $("board"),
+        tray: $("tray"),
+        ghost: $("ghost"),
+        imageUrl: src,
+        grid: play.grid,
+        shape: stage.shape,
+        seed: image.id || image.src,
+        prelock: stage.prelock || 0,
+        onSfx: (name) => Sfx.play(name),
+        onChange: (p) => paintPlayStatus(stage, p),
+        onJudge: (kind, p) => {
+          if (kind === "wrong") toast("没咬住", "warn");
+          if (kind === "board-full") toast(`还有 ${p.seated} 块没对`, "warn");
+          if (kind === "frozen") toastOnce("frozen", "放下就不能再挪");
+          if (kind === "fixed") toastOnce("fixed", "这块已经放对了");
+        },
+        onComplete: finishPlay,
+      });
+      tick();
     });
-    tick();
+  }).catch(() => {
+    if (gen !== play.loadGen) return;
+    $("board").classList.remove("is-loading");
+    if (fail) fail.hidden = false;
   });
 }
 
@@ -454,6 +597,7 @@ function finishPlay() {
   clearInterval(play.timer);
   const stage = play.stage || STAGES[0];
   const next = STAGES[stage.i + 1];
+  const coinsBefore = state.coins;
   const reward = Economy.complete(state, {
     grid: play.grid,
     imageId: play.image.id,
@@ -469,7 +613,8 @@ function finishPlay() {
     });
   }
   Store.save(state);
-  renderWallet();
+  renderWallet({ skipCoins: true });
+  animateCount(document.querySelectorAll("[data-coins]"), coinsBefore, state.coins, 480);
   const lines = [
     `基础 ${reward.base} 金币`,
     reward.firstBonus ? `今日首张 +${reward.firstBonus}` : "今日首张奖励已领过",
@@ -494,7 +639,8 @@ function finishPlay() {
     $("result-kicker").textContent = `${stage.name} 过了`;
     $("result-title").textContent = "漂亮";
     $("result-desc").textContent = stage.nextLine;
-    $("result-reward").innerHTML = `<em>+${reward.gain}</em><span>金币</span>`;
+    $("result-reward").innerHTML = `<em>+0</em><span>金币</span>`;
+    animateCount([$("result-reward").querySelector("em")], 0, reward.gain, 420, "+");
     $("result-again").textContent = "再拼本关";
     $("result-auto").hidden = false;
     $("result-auto").textContent = "下一关马上开始";
@@ -512,7 +658,8 @@ function finishPlay() {
     $("result-kicker").textContent = "六关全通";
     $("result-title").textContent = "成了";
     $("result-desc").textContent = `${play.image.name} · 从 16 块拼到 100 块 · ${$("play-time").textContent}`;
-    $("result-reward").innerHTML = `<em>+${reward.gain}</em><span>金币</span><small style="display:block;font-weight:400;margin-top:4px">${lines[0] || ""}</small>`;
+    $("result-reward").innerHTML = `<em>+0</em><span>金币</span><small style="display:block;font-weight:400;margin-top:4px">${lines[0] || ""}</small>`;
+    animateCount([$("result-reward").querySelector("em")], 0, reward.gain, 480, "+");
     $("result-more").className = "btn btn-primary";
     $("result-more").style.marginTop = "0";
     $("result-again").textContent = "从第一关再来";
@@ -571,13 +718,16 @@ function closeSheet() {
 
 function useHint() {
   if (state.hints <= 0) {
+    play.wantHint = true;
     openSheet("need-hint", true);
     return;
   }
+  play.wantHint = false;
   Economy.consumeHint(state);
   Store.save(state);
   renderWallet();
-  Puzzle.hint();
+  const ok = Puzzle.hint();
+  if (!ok) toast("都拼上了，没有可提示的块");
   if ($("overlay").dataset.sheet === "play") closeSheet();
   paintPlayMenu();
 }
@@ -601,7 +751,7 @@ function usePeek() {
 
 function startAd() {
   const err = Economy.canWatchAd(state);
-  if (err) return toast(err);
+  if (err) return toast(err, "warn");
   openSheet("ad", true);
   let left = Economy.AD_SECONDS;
   $("ad-count").textContent = left;
@@ -775,6 +925,7 @@ function bind() {
   });
   $("btn-back").onclick = () => {
     cancelAutoNext();
+    play.loadGen = (play.loadGen || 0) + 1;
     Puzzle.destroy();
     clearInterval(play.timer);
     showScreen("home");
@@ -797,6 +948,7 @@ function bind() {
   $("btn-quit").onclick = () => {
     closeSheet();
     cancelAutoNext();
+    play.loadGen = (play.loadGen || 0) + 1;
     Puzzle.destroy();
     clearInterval(play.timer);
     showScreen("home");
@@ -825,13 +977,27 @@ function bind() {
   $("me-buy").onclick = () => {
     const r = Economy.buyHint(state);
     if (!r.ok) {
-      toast(r.message);
+      toast(r.message, "warn");
       openSheet("need-hint", true);
       return;
     }
     Store.save(state);
     renderMe();
     toast(r.message);
+  };
+  $("cover-retry").onclick = () => {
+    const img = dailyImage() || IMAGES[0];
+    if (img) bindCoverImage(withBust(img.src));
+  };
+  $("play-fail-retry").onclick = () => {
+    if (!play.image) return;
+    startPlay(play.image, play.stage, { bust: true });
+  };
+  $("play-fail-home").onclick = () => {
+    play.loadGen = (play.loadGen || 0) + 1;
+    Puzzle.destroy();
+    clearInterval(play.timer);
+    goGallery();
   };
   $("me-sign").onclick = () => {
     renderSign();
@@ -852,6 +1018,9 @@ function bind() {
       return;
     }
     if (e.target === $("overlay")) {
+      if ($("overlay").dataset.sheet === "ad" && $("ad-done").style.display === "none") {
+        toast("中途关掉没有提示", "warn");
+      }
       clearInterval(startAd._t);
       closeSheet();
     }
@@ -882,6 +1051,7 @@ function bind() {
     closeSheet();
     paintPlayMenu();
     renderMe();
+    if (play.wantHint && $("screen-play").classList.contains("active")) useHint();
   };
   $("ad-retry").onclick = () => startAd();
   $("crop-ok").onclick = exportCrop;
@@ -928,6 +1098,8 @@ function boot() {
   Sfx.setEnabled(sfxEnabled());
   Sfx.setMusicEnabled(!!state.musicOn);
   document.addEventListener("pointerdown", () => Sfx.unlock());
+  window.addEventListener("orientationchange", syncRotateHint);
+  window.addEventListener("resize", syncRotateHint);
   renderWallet();
   showScreen("home");
 }

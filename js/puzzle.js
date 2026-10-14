@@ -216,6 +216,7 @@ const Puzzle = (() => {
       p.el.style.left = "auto";
       p.el.style.top = "auto";
       p.el.style.transform = "none";
+      p.el.style.willChange = "auto";
       p.el.style.animationDelay = dealing ? `${Math.min(i, 24) * 0.04}s` : "";
       trayEl.appendChild(p.el);
     });
@@ -299,17 +300,24 @@ const Puzzle = (() => {
     piece.el.classList.add("dragging");
     document.body.appendChild(piece.el);
     piece.el.style.position = "fixed";
+    piece.el.style.left = "0px";
+    piece.el.style.top = "0px";
     piece.el.style.width = pieceSize() + "px";
     piece.el.style.height = pieceSize() + "px";
+    piece.el.style.willChange = "transform";
+    if (grid >= 8) piece.el.style.filter = "none";
     moveFloating(e.clientX, e.clientY);
     document.addEventListener("pointermove", onMove);
     document.addEventListener("pointerup", onUp);
     document.addEventListener("pointercancel", onUp);
   }
 
+  function dragTransform(x, y) {
+    drag.piece.el.style.transform = `translate3d(${x}px, ${y}px, 0) scale(1.04)`;
+  }
+
   function moveFloating(cx, cy) {
-    drag.piece.el.style.left = cx - drag.dx + "px";
-    drag.piece.el.style.top = cy - drag.dy + "px";
+    dragTransform(cx - drag.dx, cy - drag.dy);
   }
 
   function pieceCenter(e) {
@@ -333,8 +341,10 @@ const Puzzle = (() => {
       const destX = br.left + target.col * slotSize - pad;
       const destY = br.top + target.row * slotSize - pad;
       const pull = 0.38;
-      piece.el.style.left = (1 - pull) * (e.clientX - drag.dx) + pull * destX + "px";
-      piece.el.style.top = (1 - pull) * (e.clientY - drag.dy) + pull * destY + "px";
+      dragTransform(
+        (1 - pull) * (e.clientX - drag.dx) + pull * destX,
+        (1 - pull) * (e.clientY - drag.dy) + pull * destY
+      );
     } else {
       moveFloating(e.clientX, e.clientY);
     }
@@ -347,6 +357,8 @@ const Puzzle = (() => {
     document.removeEventListener("pointerup", onUp);
     document.removeEventListener("pointercancel", onUp);
     piece.el.classList.remove("dragging");
+    piece.el.style.willChange = "auto";
+    piece.el.style.filter = "";
     const floating = piece.el.getBoundingClientRect();
     const c = pieceCenter(e);
     const target = targetSlot(c.x, c.y);
@@ -484,6 +496,7 @@ const Puzzle = (() => {
 
   function sparkAt(piece) {
     if (!boardEl) return;
+    if (grid >= 10) return;
     const have = boardEl.querySelectorAll(".spark").length;
     const n = Math.max(0, Math.min(6, 8 - have));
     const cx = piece.col * slotSize + slotSize / 2;
@@ -562,6 +575,9 @@ const Puzzle = (() => {
       toCol: piece.col,
     });
     lockPiece(piece, true);
+    piece.el.classList.remove("from-hint");
+    void piece.el.offsetWidth;
+    piece.el.classList.add("from-hint");
     onSfx("hint");
     renderTray();
     onChange(progress());

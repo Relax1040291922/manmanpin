@@ -2,9 +2,9 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>拼个帅哥美女</title>
-  <link rel="stylesheet" href="css/app.css?v=27">
+  <link rel="stylesheet" href="css/app.css?v=29">
 </head>
 <body>
   <aside class="desktop-note">
@@ -15,6 +15,7 @@
   <div class="phone" id="phone">
     <div class="splash" id="splash">
       <div class="splash-still" aria-hidden="true">
+        <div class="skel splash-skel" id="splash-skel"></div>
         <img id="splash-photo" alt="">
       </div>
       <div class="splash-veil"></div>
@@ -39,8 +40,13 @@
 
     <div class="screens">
       <section class="screen active" id="screen-home">
-        <div class="cover frame">
+        <div class="cover frame is-loading" id="home-cover">
+          <div class="skel cover-skel" aria-hidden="true"></div>
           <img class="cover-img" id="daily-img" alt="今日一图">
+          <div class="cover-fail" id="cover-fail" hidden>
+            <p>封面没加载上</p>
+            <button type="button" class="btn btn-primary" id="cover-retry">重试</button>
+          </div>
           <div class="cover-fade"></div>
           <div class="cover-copy">
             <span class="badge">今日必拼</span>
@@ -118,6 +124,7 @@
         </div>
         <div class="section-title">桌上的完成照<span id="badge-list">还没有徽章</span></div>
         <div class="collection" id="collection"></div>
+        <p class="hint-text" id="me-ios-mute">iPhone 侧面静音打开时整机没声，拨回去再开音效。</p>
         <p class="hint-text"><button class="btn-tiny" id="reset-data">清空本地进度</button></p>
       </section>
 
@@ -152,6 +159,12 @@
             <div class="tray" id="tray"></div>
           </div>
           <button class="tray-arrow" id="tray-next" type="button" aria-label="向右看">›</button>
+        </div>
+        <div class="play-fail" id="play-fail" hidden>
+          <strong>图没加载上</strong>
+          <p>换网络再试，或换一张图</p>
+          <button type="button" class="btn btn-primary" id="play-fail-retry">重试</button>
+          <button type="button" class="btn btn-ghost" id="play-fail-home">去图库</button>
         </div>
       </section>
     </div>
@@ -225,6 +238,7 @@
         </p>
       </div>
     </div>
+    <div class="rotate-hint" id="rotate-hint" hidden>请竖着拿手机<br>托盘才放得下</div>
     <div class="toast" id="toast"></div>
     <input id="file" type="file" accept="image/jpeg,image/png,image/webp" hidden>
     <input id="file-local" type="file" accept="image/jpeg,image/png,image/webp,image/*" hidden>
@@ -233,8 +247,8 @@
   <script src="js/store.js?v=19"></script>
   <script src="js/economy.js?v=20"></script>
   <script src="js/sfx.js?v=23"></script>
-  <script src="js/puzzle.js?v=23"></script>
+  <script src="js/puzzle.js?v=24"></script>
   <script src="js/catalog.js?v=23"></script>
-  <script src="js/app.js?v=25"></script>
+  <script src="js/app.js?v=26"></script>
 </body>
 </html>
