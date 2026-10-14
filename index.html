@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>拼个帅哥美女</title>
-  <link rel="stylesheet" href="css/app.css?v=23">
+  <link rel="stylesheet" href="css/app.css?v=24">
 </head>
 <body>
   <aside class="desktop-note">
@@ -12,25 +12,21 @@
     在右侧手机框里玩。块放下就不能再挪，错了用撤销或重来。H 帮我归位，Z 撤销，空格看一眼原图。
   </aside>
 
-  <div class="phone">
+  <div class="phone" id="phone">
     <div class="splash" id="splash">
-      <div class="splash-collage" id="splash-collage" aria-hidden="true"></div>
+      <div class="splash-still" aria-hidden="true">
+        <img id="splash-photo" alt="">
+      </div>
       <div class="splash-veil"></div>
       <div class="splash-copy">
         <h2>拼个<br>帅哥美女</h2>
+        <button class="btn btn-primary" id="splash-go" type="button">开拼</button>
       </div>
-      <div class="splash-adbar" aria-hidden="true"><i id="splash-adfill"></i></div>
     </div>
-    <div class="topbar">
-      <div class="topbar-collage" id="topbar-collage" aria-hidden="true"></div>
-      <div class="topbar-veil"></div>
-      <div class="status">
-        <span id="clock">08:44</span>
-        <span>开拼</span>
-      </div>
+    <div class="topbar" id="topbar">
       <div class="nav">
         <div class="nav-side">
-          <button class="back-btn" id="btn-back" style="visibility:hidden">返回</button>
+          <button class="back-btn" id="btn-back" type="button" style="visibility:hidden">返回</button>
         </div>
         <h1 id="nav-title">拼个帅哥美女</h1>
         <div class="nav-side right"></div>
@@ -43,19 +39,21 @@
 
     <div class="screens">
       <section class="screen active" id="screen-home">
-        <div class="cover">
+        <div class="cover frame">
           <img class="cover-img" id="daily-img" alt="今日一图">
           <div class="cover-fade"></div>
           <div class="cover-copy">
             <span class="badge">今日必拼</span>
             <h2 id="daily-name">海暮</h2>
             <p id="daily-meta">六关 · 先拼 16 块</p>
-            <button class="btn btn-primary" id="home-start">开始第一关</button>
+            <button class="btn btn-primary" id="home-start">开拼</button>
           </div>
         </div>
-        <div class="section-title">换一张接着拼</div>
-        <div class="peek-row" id="peek-row"></div>
-        <button class="btn btn-ghost" id="home-gallery">看全部图库</button>
+        <p class="home-alt">
+          <button type="button" class="text-link" id="home-gallery">图库</button>
+          <span>·</span>
+          <button type="button" class="text-link" id="home-me">我的</button>
+        </p>
       </section>
 
       <section class="screen" id="screen-gallery">
@@ -69,19 +67,33 @@
           </div>
           <div class="cats-panel" id="cats-pop" hidden></div>
         </div>
-        <p class="hint-text" style="margin:12px 0 8px" id="gallery-hint">点一张就开始拼</p>
+        <p class="hint-text" id="gallery-hint">点一张就开始拼</p>
         <div class="grid" id="gallery-grid"></div>
       </section>
 
       <section class="screen" id="screen-me">
-        <div class="row">
-          <div>
-            <div class="ttl">看完拿提示</div>
-            <div class="sub" id="me-ad-sub">今日还剩 8 次</div>
+        <div class="pause-stats">
+          <div class="pause-stat">
+            <em data-coins>0</em>
+            <span>金币</span>
           </div>
-          <button class="btn-tiny" id="me-ad">去看广告</button>
+          <div class="pause-stat">
+            <em data-hints>0</em>
+            <span>提示</span>
+          </div>
         </div>
-        <div class="list" style="margin-top:8px">
+        <div class="pause-toggles">
+          <button type="button" class="toggle-chip" id="me-sfx">音效 开</button>
+          <button type="button" class="toggle-chip" id="me-music">音乐 关</button>
+        </div>
+        <div class="list">
+          <div class="row">
+            <div>
+              <div class="ttl">看完拿提示</div>
+              <div class="sub" id="me-ad-sub">今日还剩 8 次</div>
+            </div>
+            <button class="btn-tiny" id="me-ad">去看</button>
+          </div>
           <div class="row">
             <div>
               <div class="ttl">金币换提示</div>
@@ -94,18 +106,17 @@
               <div class="ttl">每日签到</div>
               <div class="sub" id="me-sign-sub">未签到</div>
             </div>
-            <button class="btn-tiny" id="me-sign">打开</button>
+            <button class="btn-tiny" id="me-sign">领取</button>
           </div>
           <div class="row">
             <div>
-              <div class="ttl">金币怎么来</div>
+              <div class="ttl">关于这盒拼图</div>
               <div class="sub" id="me-cap">今日拼图金币 0/80</div>
             </div>
-            <button class="btn-tiny" id="me-rules">说明</button>
+            <button class="btn-tiny" id="me-rules">看看</button>
           </div>
         </div>
-        <div class="section-title">徽章<span id="badge-list">还没有</span></div>
-        <div class="section-title">我的画廊</div>
+        <div class="section-title">桌上的完成照<span id="badge-list">还没有徽章</span></div>
         <div class="collection" id="collection"></div>
         <p class="hint-text"><button class="btn-tiny" id="reset-data">清空本地进度</button></p>
       </section>
@@ -122,29 +133,11 @@
 
       <section class="screen" id="screen-play">
         <div class="play-hud">
-          <div class="play-bar"><i id="play-bar-fill"></i></div>
-          <div class="play-top">
-            <span class="time-chip">
-              <svg class="hourglass" viewBox="0 0 16 18" aria-hidden="true">
-                <path d="M3 1.5h10v2.2L9.2 9l3.8 5.3v2.2H3v-2.2L6.8 9 3 3.7V1.5z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-                <path d="M5.2 3.2h5.6L8 7.1 5.2 3.2z" fill="currentColor" opacity="0.85"/>
-              </svg>
-              <span id="play-time">00:00</span>
-            </span>
-            <span id="play-progress">第一关 · 对了 0/16</span>
-            <span class="play-meta">
-              <span id="play-hints">提示 0</span>
-              <button class="sound-btn" id="btn-sound" type="button" aria-label="音效开关">音</button>
-            </span>
-          </div>
+          <span class="play-pips" id="play-pips"></span>
+          <span id="play-progress">0/16</span>
+          <span id="play-time">00:00</span>
+          <button class="play-menu-btn" id="btn-play-menu" type="button">菜单</button>
         </div>
-        <div class="play-actions">
-          <button class="btn btn-ghost" id="btn-peek">看清楚</button>
-          <button class="btn btn-ghost" id="btn-undo">撤销</button>
-          <button class="btn btn-primary" id="btn-hint">帮我归位</button>
-          <button class="btn btn-ghost" id="btn-restart">重来</button>
-        </div>
-        <p class="play-judge" id="play-judge" hidden></p>
         <div class="table">
           <div class="board-wrap" id="board">
             <div class="board-ghost" id="ghost"></div>
@@ -162,9 +155,9 @@
     </div>
 
     <nav class="tabbar" id="tabbar">
-      <button class="on" data-tab="home"><span class="ico">✦</span>今日</button>
-      <button data-tab="gallery"><span class="ico">▣</span>图库</button>
-      <button data-tab="me"><span class="ico">◎</span>我的</button>
+      <button class="on" data-tab="home" type="button"><span class="ico ico-home"></span>今日</button>
+      <button data-tab="gallery" type="button"><span class="ico ico-grid"></span>图库</button>
+      <button data-tab="me" type="button"><span class="ico ico-me"></span>我的</button>
     </nav>
 
     <div class="overlay" id="overlay">
@@ -182,6 +175,17 @@
         <button class="btn btn-ghost" id="result-again" style="margin-top:8px">再拼本关</button>
         <button class="btn btn-ghost" id="result-home" style="margin-top:8px">去图库</button>
       </div>
+      <div class="sheet" id="sheet-play">
+        <h3>这一局</h3>
+        <p id="play-menu-meta">提示 0</p>
+        <button class="btn btn-primary" id="btn-hint">帮我归位</button>
+        <button class="btn btn-ghost" id="btn-peek" style="margin-top:8px">看清楚</button>
+        <button class="btn btn-ghost" id="btn-undo" style="margin-top:8px">撤销</button>
+        <button class="btn btn-ghost" id="btn-sound" style="margin-top:8px">音效</button>
+        <button class="btn btn-ghost" id="btn-restart" style="margin-top:8px">重来</button>
+        <button class="btn btn-ghost" id="btn-quit" style="margin-top:8px">放弃</button>
+        <button class="btn btn-ghost" id="play-menu-close" style="margin-top:8px">接着拼</button>
+      </div>
       <div class="sheet" id="sheet-sign">
         <h3>每日签到</h3>
         <p>断一天会从第 1 天重算。第 3、7 天给提示，第 5 天给双倍金币卡，第 7 天解锁江南院。</p>
@@ -195,9 +199,7 @@
             <small>看完就能拿到 1 次提示</small>
           </div>
           <div class="meta">剩余 <span id="ad-count">8</span> 秒</div>
-          <div style="height:6px;background:#EBE4D8;border-radius:99px;overflow:hidden">
-            <div id="ad-bar" style="height:100%;width:0;background:#C45C26"></div>
-          </div>
+          <div class="ad-track"><i id="ad-bar"></i></div>
           <p id="ad-status" style="margin-top:10px">请看完，中途关掉没有提示</p>
           <button class="btn btn-primary" id="ad-done" style="display:none;margin-top:8px">领取提示</button>
           <button class="btn btn-ghost" id="ad-retry" style="display:none;margin-top:8px">重试</button>
@@ -205,8 +207,8 @@
       </div>
       <div class="sheet" id="sheet-need-hint">
         <h3>没有提示了</h3>
-        <p>金币兑换每天最多 2 次，而且要 50 金币。看广告一次就能拿到 1 次提示。</p>
-        <button class="btn btn-primary" id="need-ad">去看广告</button>
+        <p>金币兑换每天最多 2 次，而且要 50 金币。看完一段就能拿到 1 次提示。</p>
+        <button class="btn btn-primary" id="need-ad">去看</button>
       </div>
       <div class="sheet" id="sheet-rules">
         <h3>为什么金币故意给少</h3>
@@ -214,7 +216,7 @@
           关卡顺序：4×4、4×4 咬合、6×6、6×6 咬合、8×8、10×10 咬合。
           方形首通 8、14、22 金，咬合 12、18、34 金。
           同一张当天再拼会少很多。每天拼图金币上限 80。换一次提示要 50 金，每天限兑 2 次。
-          看广告直接 +1 提示，每天 8 次，这才是主路径。
+          看完拿提示，每天 8 次，这才是主路径。
         </p>
         <p>
           签到除了金币，还可以送：提示、双倍金币卡、专属图、徽章。
@@ -226,11 +228,11 @@
     <input id="file-local" type="file" accept="image/jpeg,image/png,image/webp,image/*" hidden>
   </div>
 
-  <script src="js/store.js?v=17"></script>
+  <script src="js/store.js?v=18"></script>
   <script src="js/economy.js?v=20"></script>
   <script src="js/sfx.js?v=22"></script>
   <script src="js/puzzle.js?v=22"></script>
-  <script src="js/catalog.js?v=21"></script>
-  <script src="js/app.js?v=22"></script>
+  <script src="js/catalog.js?v=22"></script>
+  <script src="js/app.js?v=23"></script>
 </body>
 </html>

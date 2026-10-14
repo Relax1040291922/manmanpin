@@ -96,43 +96,20 @@ function goGallery() {
   document.querySelector('[data-tab="gallery"]').click();
 }
 
+function goMe() {
+  document.querySelector('[data-tab="me"]').click();
+}
+
 function paintSplash() {
-  const box = $("splash-collage");
-  if (!box) return;
-  const people = IMAGES.filter((x) => x.cat === "beauty" || x.cat === "handsome");
-  const near = [
-    { top: "-8%", left: "-18%", w: 128, rot: -18, d: 0 },
-    { top: "4%", left: "22%", w: 96, rot: 12, d: 0.4 },
-    { top: "-6%", left: "58%", w: 118, rot: -8, d: 0.8 },
-    { top: "8%", left: "86%", w: 108, rot: 16, d: 0.2 },
-    { top: "28%", left: "-12%", w: 102, rot: 10, d: 1.1 },
-    { top: "36%", left: "62%", w: 124, rot: 8, d: 1.4 },
-    { top: "48%", left: "88%", w: 92, rot: -12, d: 0.3 },
-    { top: "62%", left: "-16%", w: 116, rot: 14, d: 0.9 },
-    { top: "68%", left: "18%", w: 90, rot: -10, d: 1.2 },
-    { top: "70%", left: "72%", w: 110, rot: 11, d: 0.5 },
-    { top: "78%", left: "86%", w: 130, rot: -16, d: 0.7 },
-    { top: "38%", left: "-4%", w: 88, rot: -14, d: 0.6 },
-  ];
-  const guys = [
-    { top: "20%", left: "16%", w: 108, rot: -11, d: 0.35, src: "assets/handsome-street.png" },
-    { top: "29%", left: "40%", w: 100, rot: 13, d: 0.85, src: "assets/handsome-cafe.png" },
-    { top: "51%", left: "26%", w: 106, rot: -8, d: 0.55, src: "assets/handsome-rooftop.png" },
-  ];
-  const nearHtml = near.map((p, i) => {
-    const img = people[i % people.length];
-    return `<img class="near" src="${img.src}" alt="" style="top:${p.top};left:${p.left};width:${p.w}px;height:${p.w}px;transform:rotate(${p.rot}deg);animation-delay:${p.d}s">`;
-  }).join("");
-  const guyHtml = guys.map((p) =>
-    `<img class="near" src="${p.src}" alt="" style="top:${p.top};left:${p.left};width:${p.w}px;height:${p.w}px;transform:rotate(${p.rot}deg);animation-delay:${p.d}s">`
-  ).join("");
-  box.innerHTML = nearHtml + guyHtml;
+  const photo = $("splash-photo");
+  if (!photo) return;
+  const img = dailyImage() || IMAGES.find((x) => x.cat === "beauty") || IMAGES[0];
+  if (img) photo.src = img.src;
 }
 
 function dismissSplash() {
   const el = $("splash");
   if (!el || el.hidden) return;
-  clearTimeout(startSplash._t);
   el.classList.add("out");
   setTimeout(() => {
     el.hidden = true;
@@ -142,40 +119,6 @@ function dismissSplash() {
 
 function startSplash() {
   paintSplash();
-  const fill = $("splash-adfill");
-  if (fill) {
-    fill.style.width = "0%";
-    fill.style.transition = "none";
-    requestAnimationFrame(() => {
-      fill.style.transition = "width 3000ms linear";
-      fill.style.width = "100%";
-    });
-  }
-  clearTimeout(startSplash._t);
-  startSplash._t = setTimeout(dismissSplash, 3000);
-}
-
-function paintTopbarCollage() {
-  const box = $("topbar-collage");
-  if (!box || box.dataset.ready) return;
-  const pool = IMAGES.filter((x) => x.cat === "beauty" || x.cat === "handsome");
-  const layout = [
-    { top: "-22%", left: "-10%", w: 74, rot: -18 },
-    { top: "-16%", left: "18%", w: 58, rot: 14 },
-    { top: "-26%", left: "42%", w: 70, rot: -8 },
-    { top: "-12%", left: "66%", w: 62, rot: 16 },
-    { top: "-20%", left: "88%", w: 56, rot: -14 },
-    { top: "36%", left: "-14%", w: 68, rot: 12 },
-    { top: "44%", left: "16%", w: 52, rot: -16 },
-    { top: "32%", left: "40%", w: 64, rot: 9 },
-    { top: "42%", left: "64%", w: 58, rot: -11 },
-    { top: "28%", left: "86%", w: 72, rot: 18 },
-  ];
-  box.innerHTML = layout.map((p, i) => {
-    const img = pool[i % pool.length];
-    return `<img src="${img.src}" alt="" style="top:${p.top};left:${p.left};width:${p.w}px;height:${p.w}px;transform:rotate(${p.rot}deg)">`;
-  }).join("");
-  box.dataset.ready = "1";
 }
 
 function dailyImage() {
@@ -190,7 +133,7 @@ function toast(msg, kind) {
   el.classList.toggle("warn", kind === "warn");
   el.classList.add("show");
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => el.classList.remove("show", "warn"), kind === "warn" ? 2000 : 1800);
+  toast._t = setTimeout(() => el.classList.remove("show", "warn"), kind === "warn" ? 1100 : 1600);
 }
 
 function toastOnce(key, msg, kind) {
@@ -201,24 +144,32 @@ function toastOnce(key, msg, kind) {
   toast(msg, kind);
 }
 
+function paintPlayPips(stage) {
+  const box = $("play-pips");
+  if (!box || !stage) return;
+  box.innerHTML = STAGES.map((s) => {
+    const on = s.i <= stage.i ? "on" : "";
+    const jag = s.shape === "jigsaw" ? "jag" : "";
+    const cls = [on, jag].filter(Boolean).join(" ");
+    return `<i${cls ? ` class="${cls}"` : ""}></i>`;
+  }).join("");
+}
+
 function paintPlayStatus(stage, p) {
-  $("play-progress").textContent = `${stage.name} · 对了 ${p.locked}/${p.total}`;
-  $("play-bar-fill").style.width = `${(p.locked / p.total) * 100}%`;
-  const el = $("play-judge");
-  if (!el) return;
-  if (p.seated && p.tray === 0) {
-    el.hidden = false;
-    el.classList.add("show");
-    el.textContent = `还没拼完，有 ${p.seated} 块放错了`;
-  } else if (p.seated) {
-    el.hidden = false;
-    el.classList.add("show");
-    el.textContent = `${p.seated} 块放错了，点撤销`;
-  } else {
-    el.hidden = true;
-    el.classList.remove("show");
-    el.textContent = "";
+  $("play-progress").textContent = `${p.locked}/${p.total}`;
+}
+
+function paintPlayMenu() {
+  const meta = $("play-menu-meta");
+  if (meta) {
+    const stage = play.stage;
+    meta.textContent = stage
+      ? `${stage.name} · 提示 ${state.hints} · 撤销 ${play.undos}`
+      : `提示 ${state.hints}`;
   }
+  if ($("btn-peek")) $("btn-peek").textContent = `看清楚 ${play.peeks}`;
+  if ($("btn-undo")) $("btn-undo").textContent = `撤销 ${play.undos}`;
+  paintSoundBtn();
 }
 
 function renderWallet() {
@@ -230,11 +181,13 @@ function showScreen(name) {
   closeCatMore();
   document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
   $("screen-" + name).classList.add("active");
-  const playMode = name === "play" || name === "crop";
-  $("tabbar").style.display = playMode ? "none" : "flex";
-  $("wallet").style.display = playMode ? "none" : "flex";
-  $("btn-back").style.visibility = playMode ? "visible" : "hidden";
-  document.querySelector(".topbar").classList.toggle("plain", playMode);
+  const playMode = name === "play";
+  const hideChrome = name === "play" || name === "crop";
+  $("phone").classList.toggle("playing", playMode);
+  $("tabbar").style.display = hideChrome ? "none" : "flex";
+  if ($("wallet")) $("wallet").style.display = hideChrome ? "none" : "flex";
+  $("btn-back").style.visibility = name === "crop" ? "visible" : "hidden";
+  $("topbar").style.display = playMode ? "none" : "";
   $("nav-title").textContent = {
     home: "拼个帅哥美女",
     gallery: "图库",
@@ -266,30 +219,6 @@ function renderHome() {
   }
   $("home-start").textContent = startLabel(img);
   $("home-start").onclick = () => startPlay(img);
-  const peek = $("peek-row");
-  if (!peek) return;
-  peek.innerHTML = "";
-  const peeks = IMAGES.filter((x) => !x.exclusive && x.id !== img.id);
-  const order = ["beauty", "handsome", "anime", "landmark", "car", "scenery", "star", "pet"];
-  peeks.sort((a, b) => {
-    const ia = order.indexOf(a.cat);
-    const ib = order.indexOf(b.cat);
-    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
-  });
-  const seen = new Set();
-  const mixed = [];
-  peeks.forEach((item) => {
-    if (seen.has(item.cat) || mixed.length >= 4) return;
-    seen.add(item.cat);
-    mixed.push(item);
-  });
-  mixed.forEach((item) => {
-    const btn = document.createElement("button");
-    btn.className = "peek";
-    btn.innerHTML = `<img src="${item.src}" alt="${item.name}"><span>${item.name}</span>`;
-    btn.onclick = () => startPlay(item);
-    peek.appendChild(btn);
-  });
 }
 
 function allGalleryImages() {
@@ -349,13 +278,13 @@ function renderGallery() {
     pop.appendChild(b);
   });
   const hint = $("gallery-hint");
-  if (hint) hint.textContent = galleryCat === "local" ? "选一张手机里的图，不上传，只在这局拼" : "点一张就开始拼";
+  if (hint) hint.textContent = galleryCat === "local" ? "只在这台设备玩，不上传" : "点一张就开始拼";
   const box = $("gallery-grid");
   box.innerHTML = "";
   if (galleryCat === "local") {
     const pick = document.createElement("button");
     pick.className = "upload-tile";
-    pick.innerHTML = "<strong>选一张本地图</strong><span>不上传，自动裁成方形后开拼</span>";
+    pick.innerHTML = "<strong>选一张本地图</strong><span>只在这台设备玩，不上传</span>";
     pick.onclick = () => $("file-local").click();
     box.appendChild(pick);
     return;
@@ -403,13 +332,15 @@ function renderGallery() {
 
 function renderMe() {
   renderWallet();
+  paintSoundBtn();
+  paintMusicBtn();
   const adLeft = Economy.DAILY_AD_CAP - state.daily.adsWatched;
   const buyLeft = Economy.DAILY_COIN_HINT_CAP - state.daily.coinHintsBought;
   $("me-ad-sub").textContent = `看完即得 1 次提示，今日还剩 ${adLeft} 次`;
   $("me-buy-sub").textContent = `${Economy.HINT_COST} 金币 / 次，今日还剩 ${buyLeft} 次`;
   $("me-sign-sub").textContent = Economy.signStatus(state).claimed ? "今天已签到" : "今日未签到";
   $("me-cap").textContent = `今日拼图金币 ${state.daily.puzzleCoins}/${Economy.DAILY_PUZZLE_COIN_CAP}`;
-  $("badge-list").textContent = state.badges.length ? state.badges.join(" · ") : "还没有徽章，先去签到";
+  $("badge-list").textContent = state.badges.length ? state.badges.join(" · ") : "还没有徽章";
   const col = $("collection");
   if (!state.collection.length) {
     col.innerHTML = `<div class="empty" style="grid-column:1/-1"><strong>画廊是空的</strong>拼完一张就会收进来</div>`;
@@ -424,10 +355,23 @@ function renderMe() {
 
 function paintSoundBtn() {
   const btn = $("btn-sound");
-  if (!btn) return;
-  btn.textContent = state.soundOn ? "音" : "静";
-  btn.classList.toggle("off", !state.soundOn);
-  btn.setAttribute("aria-label", state.soundOn ? "关闭音效" : "打开音效");
+  if (btn) {
+    btn.textContent = state.soundOn ? "音效 开" : "音效 关";
+    btn.classList.toggle("off", !state.soundOn);
+    btn.setAttribute("aria-label", state.soundOn ? "关闭音效" : "打开音效");
+  }
+  const me = $("me-sfx");
+  if (me) {
+    me.textContent = state.soundOn ? "音效 开" : "音效 关";
+    me.classList.toggle("off", !state.soundOn);
+  }
+}
+
+function paintMusicBtn() {
+  const me = $("me-music");
+  if (!me) return;
+  me.textContent = state.musicOn ? "音乐 开" : "音乐 关";
+  me.classList.toggle("off", !state.musicOn);
 }
 
 function toggleSound() {
@@ -440,6 +384,12 @@ function toggleSound() {
     Sfx.play("lock");
   }
 }
+
+function toggleMusic() {
+  state.musicOn = !state.musicOn;
+  Store.save(state);
+  paintMusicBtn();
+}
 function startPlay(image, stageArg) {
   cancelAutoNext();
   const stage = resolveStage(stageArg) || nextStageOf(image);
@@ -451,16 +401,9 @@ function startPlay(image, stageArg) {
   play.peeks = 2;
   play.undos = stage.undos;
   showScreen("play");
-  $("nav-title").textContent = stage.name;
-  paintSoundBtn();
-  $("play-hints").textContent = `提示 ${state.hints}`;
-  $("btn-peek").textContent = `看清楚 ${play.peeks}`;
-  $("btn-undo").textContent = `撤销 ${play.undos}`;
-  $("play-progress").textContent = `${stage.name} · 对了 0/${stage.pieces}`;
-  $("play-bar-fill").style.width = "0%";
-  $("play-judge").hidden = true;
-  $("play-judge").classList.remove("show");
-  $("play-judge").textContent = "";
+  paintPlayPips(stage);
+  paintPlayMenu();
+  $("play-progress").textContent = `0/${stage.pieces}`;
   $("board").classList.remove("shattering");
   requestAnimationFrame(() => {
     Puzzle.create({
@@ -475,9 +418,9 @@ function startPlay(image, stageArg) {
       onSfx: (name) => Sfx.play(name),
       onChange: (p) => paintPlayStatus(stage, p),
       onJudge: (kind, p) => {
-        if (kind === "wrong") toast("放错了，点撤销", "warn");
-        if (kind === "board-full") toast(`还没拼完，有 ${p.seated} 块放错了`, "warn");
-        if (kind === "frozen") toastOnce("frozen", "放下就不能再挪，点撤销", "warn");
+        if (kind === "wrong") toast("没咬住", "warn");
+        if (kind === "board-full") toast(`还有 ${p.seated} 块没对`, "warn");
+        if (kind === "frozen") toastOnce("frozen", "放下就不能再挪");
         if (kind === "fixed") toastOnce("fixed", "这块已经放对了");
       },
       onComplete: finishPlay,
@@ -620,14 +563,16 @@ function useHint() {
   Store.save(state);
   renderWallet();
   Puzzle.hint();
-  $("play-hints").textContent = `提示 ${state.hints}`;
+  if ($("overlay").dataset.sheet === "play") closeSheet();
+  paintPlayMenu();
 }
 
 function useUndo() {
   if (play.undos <= 0) return toast("这局撤销用完了");
   if (!Puzzle.undo()) return toast("没有可撤销的步骤");
   play.undos -= 1;
-  $("btn-undo").textContent = `撤销 ${play.undos}`;
+  if ($("overlay").dataset.sheet === "play") closeSheet();
+  paintPlayMenu();
 }
 
 function usePeek() {
@@ -635,7 +580,8 @@ function usePeek() {
   play.peeks -= 1;
   Sfx.play("peek");
   Puzzle.peek(1400);
-  $("btn-peek").textContent = `看清楚 ${play.peeks}`;
+  if ($("overlay").dataset.sheet === "play") closeSheet();
+  paintPlayMenu();
 }
 
 function startAd() {
@@ -805,7 +751,6 @@ function exportCrop() {
 }
 
 function bind() {
-  $("clock").textContent = new Date().toTimeString().slice(0, 5);
   document.querySelectorAll(".tabbar button").forEach((b) => {
     b.onclick = () => {
       document.querySelectorAll(".tabbar button").forEach((x) => x.classList.remove("on"));
@@ -824,7 +769,23 @@ function bind() {
     playLocalFile(e.target.files[0]);
     e.target.value = "";
   };
+  $("splash-go").onclick = dismissSplash;
   $("home-gallery").onclick = goGallery;
+  $("home-me").onclick = goMe;
+  $("me-sfx").onclick = toggleSound;
+  $("me-music").onclick = toggleMusic;
+  $("btn-play-menu").onclick = () => {
+    paintPlayMenu();
+    openSheet("play");
+  };
+  $("play-menu-close").onclick = closeSheet;
+  $("btn-quit").onclick = () => {
+    closeSheet();
+    cancelAutoNext();
+    Puzzle.destroy();
+    clearInterval(play.timer);
+    showScreen("home");
+  };
   $("btn-hint").onclick = useHint;
   $("btn-undo").onclick = useUndo;
   $("btn-peek").onclick = usePeek;
@@ -842,9 +803,9 @@ function bind() {
   $("btn-restart").onclick = () => {
     if (!play.image) return;
     if (!confirm("这局进度会清空，确定重来？")) return;
+    closeSheet();
     startPlay(play.image, play.stage);
   };
-  $("play-hints").parentElement;
   $("me-ad").onclick = startAd;
   $("me-buy").onclick = () => {
     const r = Economy.buyHint(state);
@@ -904,7 +865,7 @@ function bind() {
   };
   $("ad-done").onclick = () => {
     closeSheet();
-    $("play-hints").textContent = `提示 ${state.hints}`;
+    paintPlayMenu();
     renderMe();
   };
   $("ad-retry").onclick = () => startAd();
@@ -945,12 +906,10 @@ function bind() {
 function boot() {
   bind();
   startSplash();
-  paintTopbarCollage();
   Sfx.setEnabled(state.soundOn);
   document.addEventListener("pointerdown", () => Sfx.unlock());
   renderWallet();
   showScreen("home");
-  $("play-hints").textContent = `提示 ${state.hints}`;
 }
 
 boot();
