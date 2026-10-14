@@ -89,6 +89,7 @@ const Puzzle = (() => {
     picks.slice(0, n).forEach((p) => {
       p.given = true;
       lockPiece(p, true);
+      p.el.classList.add("given");
     });
   }
 
@@ -209,13 +210,19 @@ const Puzzle = (() => {
       requestAnimationFrame(() => requestAnimationFrame(syncTrayArrows));
       return;
     }
-    waiting.forEach((p) => {
+    const dealing = trayEl.classList.contains("deal-in");
+    waiting.forEach((p, i) => {
       p.el.style.position = "relative";
       p.el.style.left = "auto";
       p.el.style.top = "auto";
       p.el.style.transform = "none";
+      p.el.style.animationDelay = dealing ? `${Math.min(i, 24) * 0.04}s` : "";
       trayEl.appendChild(p.el);
     });
+    if (dealing) {
+      clearTimeout(renderTray._deal);
+      renderTray._deal = setTimeout(() => trayEl.classList.remove("deal-in"), 380 + Math.min(waiting.length, 24) * 40);
+    }
     requestAnimationFrame(() => requestAnimationFrame(syncTrayArrows));
   }
 
@@ -288,6 +295,7 @@ const Puzzle = (() => {
     piece.state = "dragging";
     onSfx("pick");
     clearMagnet();
+    piece.el.classList.remove("reject");
     piece.el.classList.add("dragging");
     document.body.appendChild(piece.el);
     piece.el.style.position = "fixed";
@@ -314,9 +322,22 @@ const Puzzle = (() => {
 
   function onMove(e) {
     if (!drag) return;
-    moveFloating(e.clientX, e.clientY);
+    const piece = drag.piece;
     const c = pieceCenter(e);
-    paintMagnet(targetSlot(c.x, c.y));
+    const target = targetSlot(c.x, c.y);
+    const ok = target && target.row === piece.row && target.col === piece.col;
+    paintMagnet(ok ? target : null);
+    if (ok) {
+      const br = boardEl.getBoundingClientRect();
+      const pad = tabPad();
+      const destX = br.left + target.col * slotSize - pad;
+      const destY = br.top + target.row * slotSize - pad;
+      const pull = 0.38;
+      piece.el.style.left = (1 - pull) * (e.clientX - drag.dx) + pull * destX + "px";
+      piece.el.style.top = (1 - pull) * (e.clientY - drag.dy) + pull * destY + "px";
+    } else {
+      moveFloating(e.clientX, e.clientY);
+    }
   }
 
   function onUp(e) {
@@ -326,36 +347,37 @@ const Puzzle = (() => {
     document.removeEventListener("pointerup", onUp);
     document.removeEventListener("pointercancel", onUp);
     piece.el.classList.remove("dragging");
+    const floating = piece.el.getBoundingClientRect();
     const c = pieceCenter(e);
     const target = targetSlot(c.x, c.y);
+    const ok = target && target.row === piece.row && target.col === piece.col;
     clearMagnet();
 
     const from = { from: drag.from, fromRow: drag.fromRow, fromCol: drag.fromCol };
-    if (target) {
-      const to = target.row === piece.row && target.col === piece.col ? "lock" : "seat";
-      if (to === "lock") lockPiece(piece);
-      else seatPiece(piece, target.row, target.col);
+    drag = null;
+    if (ok) {
+      lockPiece(piece, false, floating);
       pushMove({
         id: piece.id,
         ...from,
-        to,
-        toRow: target.row,
-        toCol: target.col,
+        to: "lock",
+        toRow: piece.row,
+        toCol: piece.col,
       });
-      const p = progress();
-      if (to === "lock") onJudge("right", p);
-      else if (p.tray === 0) onJudge("board-full", p);
-      else onJudge("wrong", p);
+      onJudge("right", progress());
+      syncTrayArrows();
     } else {
       piece.state = "tray";
       piece.slotRow = undefined;
       piece.slotCol = undefined;
       piece.el.classList.remove("locked", "seated", "just-wrong");
       onSfx("back");
-      if (from.from !== "tray") pushMove({ id: piece.id, ...from, to: "tray" });
+      if (overBoard(c.x, c.y)) onJudge("wrong", progress());
+      renderTray();
+      piece.el.classList.remove("reject");
+      void piece.el.offsetWidth;
+      piece.el.classList.add("reject");
     }
-    drag = null;
-    renderTray();
     onChange(progress());
     checkComplete();
   }
@@ -395,6 +417,8 @@ const Puzzle = (() => {
         }
       }
     }
+    const snap = slotSize * 0.42;
+    if (!best || bestD > snap * snap) return null;
     return best;
   }
 
@@ -416,19 +440,70 @@ const Puzzle = (() => {
     history.push(move);
   }
 
-  function lockPiece(piece, quiet) {
+  function lockPiece(piece, quiet, fromScreen) {
     piece.state = "locked";
     piece.slotRow = piece.row;
     piece.slotCol = piece.col;
     piece.el.classList.add("locked");
-    piece.el.classList.remove("seated", "just-wrong");
-    placeOnBoard(piece, piece.row, piece.col);
-    piece.el.classList.remove("just-in");
-    void piece.el.offsetWidth;
-    piece.el.classList.add("just-in");
+    piece.el.classList.remove("seated", "just-wrong", "dragging");
+    const pad = tabPad();
+    const destL = piece.col * slotSize - pad;
+    const destT = piece.row * slotSize - pad;
+    boardEl.appendChild(piece.el);
+    piece.el.style.position = "absolute";
+    piece.el.style.width = pieceSize() + "px";
+    piece.el.style.height = pieceSize() + "px";
+    if (fromScreen && boardEl.getBoundingClientRect) {
+      const br = boardEl.getBoundingClientRect();
+      piece.el.style.left = fromScreen.left - br.left + "px";
+      piece.el.style.top = fromScreen.top - br.top + "px";
+      piece.el.style.transform = "none";
+      piece.el.classList.add("settling");
+      requestAnimationFrame(() => {
+        piece.el.style.left = destL + "px";
+        piece.el.style.top = destT + "px";
+      });
+      clearTimeout(piece._settle);
+      piece._settle = setTimeout(() => piece.el.classList.remove("settling"), 140);
+    } else {
+      piece.el.style.left = destL + "px";
+      piece.el.style.top = destT + "px";
+      piece.el.style.transform = "none";
+    }
+    if (!fromScreen) {
+      piece.el.classList.remove("just-in");
+      void piece.el.offsetWidth;
+      piece.el.classList.add("just-in");
+    }
     if (!quiet) {
       combo += 1;
       onSfx(combo >= 3 ? "combo" : "lock");
+      sparkAt(piece);
+    }
+  }
+
+  function sparkAt(piece) {
+    if (!boardEl) return;
+    const have = boardEl.querySelectorAll(".spark").length;
+    const n = Math.max(0, Math.min(6, 8 - have));
+    const cx = piece.col * slotSize + slotSize / 2;
+    const cy = piece.row * slotSize + slotSize / 2;
+    for (let i = 0; i < n; i++) {
+      const s = document.createElement("i");
+      s.className = "spark";
+      const a = (Math.PI * 2 * i) / Math.max(n, 1) + Math.random() * 0.5;
+      const d = 10 + Math.random() * 16;
+      s.style.left = cx + "px";
+      s.style.top = cy + "px";
+      s.style.setProperty("--sx", Math.cos(a) * d + "px");
+      s.style.setProperty("--sy", Math.sin(a) * d + "px");
+      boardEl.appendChild(s);
+      setTimeout(() => s.remove(), 420);
+    }
+    if (combo >= 3) {
+      boardEl.classList.remove("combo-hit");
+      void boardEl.offsetWidth;
+      boardEl.classList.add("combo-hit");
     }
   }
 
@@ -530,7 +605,10 @@ const Puzzle = (() => {
     shape = "square";
     clearTimeout(peekTimer);
     clearTimeout(create._intro);
-    if (boardEl) boardEl.classList.remove("jigsaw");
+    if (boardEl) {
+      boardEl.querySelectorAll(".spark").forEach((s) => s.remove());
+      boardEl.classList.remove("jigsaw", "combo-hit");
+    }
     if (ghostEl) {
       ghostEl.classList.remove("reveal", "peeking");
       ghostEl.style.backgroundImage = "";

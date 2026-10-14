@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>拼个帅哥美女</title>
-  <link rel="stylesheet" href="css/app.css?v=24">
+  <link rel="stylesheet" href="css/app.css?v=25">
 </head>
 <body>
   <aside class="desktop-note">
     <strong>拼个帅哥美女</strong>
-    在右侧手机框里玩。块放下就不能再挪，错了用撤销或重来。H 帮我归位，Z 撤销，空格看一眼原图。
+    在右侧手机框里玩。放对了就嵌住，没咬住会弹回托盘。H 帮我归位，Z 撤销，空格看一眼原图。
   </aside>
 
   <div class="phone" id="phone">
@@ -139,9 +139,11 @@
           <button class="play-menu-btn" id="btn-play-menu" type="button">菜单</button>
         </div>
         <div class="table">
-          <div class="board-wrap" id="board">
-            <div class="board-ghost" id="ghost"></div>
-            <div class="board-grid"></div>
+          <div class="board-frame">
+            <div class="board-wrap" id="board">
+              <div class="board-ghost" id="ghost"></div>
+              <div class="board-grid"></div>
+            </div>
           </div>
         </div>
         <div class="tray-row" id="tray-row">
@@ -231,8 +233,8 @@
   <script src="js/store.js?v=18"></script>
   <script src="js/economy.js?v=20"></script>
   <script src="js/sfx.js?v=22"></script>
-  <script src="js/puzzle.js?v=22"></script>
+  <script src="js/puzzle.js?v=23"></script>
   <script src="js/catalog.js?v=22"></script>
-  <script src="js/app.js?v=23"></script>
+  <script src="js/app.js?v=24"></script>
 </body>
 </html>

@@ -173,7 +173,14 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   height: 0;
   display: none;
 }
-.screen.active { display: block; }
+.screen.active {
+  display: block;
+  animation: screen-in 0.28s ease;
+}
+@keyframes screen-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 #screen-home {
   padding-top: 16px;
 }
@@ -602,9 +609,12 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   overflow: hidden;
   display: none;
   flex-direction: column;
-  background: var(--desk-deep);
+  background: var(--desk-deep) url("../assets/ui/wood-desk.png") center/256px repeat;
 }
-#screen-play.active { display: flex; }
+#screen-play.active {
+  display: flex;
+  animation: screen-in 0.28s ease;
+}
 .play-hud {
   display: flex;
   align-items: center;
@@ -676,7 +686,8 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   overflow-y: hidden;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  background: rgba(42, 28, 20, 0.45);
+  background: url("../assets/ui/wood-desk.png") center/cover;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.28);
   border-radius: 12px;
 }
 .tray-viewport::-webkit-scrollbar {
@@ -752,20 +763,34 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   text-decoration: none;
   opacity: 0.55;
 }
+.board-frame {
+  padding: 12px;
+  background: url("../assets/ui/wood-desk.png") center/cover;
+  border-radius: 10px;
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 220, 160, 0.18),
+    inset -3px -5px 10px rgba(0, 0, 0, 0.42),
+    0 12px 22px rgba(0, 0, 0, 0.32);
+  flex-shrink: 0;
+}
 .board-wrap {
   width: 318px;
   height: 318px;
   margin: 0 auto;
-  background: var(--wood);
-  border-radius: 8px;
+  background: url("../assets/ui/wood-board.png") center/cover;
+  border-radius: 4px;
   position: relative;
   overflow: hidden;
-  border: 10px solid var(--wood-frame);
-  box-shadow:
-    inset 0 0 0 2px var(--wood-in),
-    0 10px 18px rgba(0,0,0,0.28);
-  flex-shrink: 0;
+  border: 0;
+  box-shadow: inset 2px 2px 8px rgba(60, 30, 8, 0.28);
   box-sizing: border-box;
+}
+.board-wrap.combo-hit {
+  animation: combo-pulse 0.22s ease;
+}
+@keyframes combo-pulse {
+  0% { filter: brightness(1.08); }
+  100% { filter: none; }
 }
 .board-wrap.shattering .piece {
   animation: shatter-out 0.62s ease forwards;
@@ -790,8 +815,8 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   position: absolute;
   inset: 0;
   background-size: 100% 100%;
-  opacity: 0.3;
-  filter: blur(0.2px) saturate(0.92);
+  opacity: 0.22;
+  filter: saturate(0.72) brightness(0.96);
   pointer-events: none;
   display: block;
 }
@@ -799,7 +824,9 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(215, 176, 122, 0.05);
+  background: url("../assets/ui/wood-board.png") center/cover;
+  opacity: 0.32;
+  mix-blend-mode: multiply;
 }
 .board-ghost.reveal {
   opacity: 1;
@@ -818,12 +845,13 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   display: grid;
 }
 .slot {
-  border: 1px dashed rgba(90, 50, 10, 0.28);
-  background: rgba(232, 204, 160, 0.28);
+  border: 0;
+  box-shadow: inset 0 0 0 1px rgba(80, 48, 16, 0.16);
+  background: rgba(40, 24, 10, 0.05);
 }
 .slot.magnet {
-  background: rgba(196, 92, 38, 0.22);
-  box-shadow: none;
+  background: rgba(196, 92, 38, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(196, 92, 38, 0.35);
 }
 .board-wrap.jigsaw .slot {
   border: 0;
@@ -836,95 +864,100 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .piece {
   position: absolute;
   background-repeat: no-repeat;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.28);
-  outline: 1px solid rgba(255, 255, 255, 0.55);
+  outline: 0;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.38),
+    inset -2px -3px 4px rgba(40, 20, 8, 0.38),
+    2px 3px 5px rgba(0, 0, 0, 0.32);
   touch-action: none;
   cursor: grab;
   z-index: 2;
 }
+.piece::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.26) 0%, transparent 38%, rgba(0, 0, 0, 0.2) 100%);
+}
 .piece.jigsaw {
-  outline: 0;
   box-shadow: none;
-  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.32));
+  filter: drop-shadow(2px 3px 3px rgba(0, 0, 0, 0.34));
 }
-.piece.jigsaw.seated {
-  outline: 0;
-  box-shadow: none;
-  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.28));
+.piece.jigsaw::after {
+  clip-path: inherit;
+  -webkit-clip-path: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0%, transparent 40%, rgba(0, 0, 0, 0.24) 100%);
 }
-.piece.jigsaw.seated.just-wrong {
-  animation: jigsaw-wrong 0.4s ease;
-}
-@keyframes jigsaw-wrong {
-  0% { filter: drop-shadow(0 0 6px var(--danger)) drop-shadow(0 2px 3px rgba(0,0,0,0.28)); }
-  100% { filter: drop-shadow(0 2px 3px rgba(0,0,0,0.28)); }
-}
-.piece.jigsaw.locked {
-  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.18));
-}
-.piece.jigsaw.dragging {
-  outline: 0;
-  box-shadow: none;
-  cursor: grabbing;
-  z-index: 20;
-  transition: none;
-  transform: scale(1.06) rotate(-2deg);
-  filter: drop-shadow(0 0 0 2px var(--accent)) drop-shadow(0 10px 16px rgba(0,0,0,0.4));
-}
-.piece.seated:not(.jigsaw) {
+.piece.locked,
+.piece.given {
   cursor: pointer;
-  outline: 0;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.28);
-  z-index: 2;
-  transition: left 0.16s ease, top 0.16s ease;
-}
-.piece.seated.jigsaw {
-  cursor: pointer;
-  z-index: 2;
-  transition: left 0.16s ease, top 0.16s ease;
-}
-.piece.seated.just-wrong {
-  animation: wrong-flash 0.45s ease;
-}
-@keyframes wrong-flash {
-  0% { box-shadow: 0 0 0 5px rgba(163, 58, 44, 0.55), 0 2px 6px rgba(0,0,0,0.28); }
-  100% { box-shadow: 0 2px 6px rgba(0,0,0,0.28); }
-}
-.piece.locked {
-  cursor: pointer;
-  box-shadow: none;
+  box-shadow: inset 0 0 0 1px rgba(40, 24, 10, 0.12);
   outline: 0;
   z-index: 1;
-  transition: left 0.16s ease, top 0.16s ease;
+  filter: none;
+}
+.piece.locked::after,
+.piece.given::after {
+  opacity: 0.12;
 }
 .piece.nudge { animation: nudge 0.28s ease; }
 @keyframes nudge {
   0%, 100% { filter: none; }
   40% { filter: brightness(1.28); }
 }
-.piece.just-in { animation: pop-in 0.28s ease; }
+.piece.just-in { animation: pop-in 0.22s ease; }
+.piece.settling {
+  transition: left 0.1s ease, top 0.1s ease, transform 0.1s ease;
+  transform: none;
+}
 .piece.dragging {
   cursor: grabbing;
-  z-index: 20;
-  outline: 2px solid var(--accent);
-  box-shadow: 0 12px 22px rgba(0,0,0,0.35);
+  z-index: 40;
+  outline: 0;
+  will-change: transform, left, top;
   transition: none;
-  transform: scale(1.08) rotate(-3deg);
+  transform: translateY(-8px) scale(1.05) rotate(-2deg);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.4),
+    0 16px 24px rgba(0, 0, 0, 0.42);
+}
+.piece.jigsaw.dragging {
+  filter: drop-shadow(0 14px 16px rgba(0, 0, 0, 0.42));
 }
 @keyframes pop-in {
-  0% { transform: scale(1.08); }
+  0% { transform: scale(1.06); }
   100% { transform: scale(1); }
 }
-.tray .piece { flex: 0 0 auto; transition: transform 0.14s ease; }
-.tray .piece:active { transform: scale(1.06); }
-.tray.deal-in .piece { animation: deal 0.35s ease backwards; }
-.tray.deal-in .piece:nth-child(1) { animation-delay: 0.02s; }
-.tray.deal-in .piece:nth-child(2) { animation-delay: 0.04s; }
-.tray.deal-in .piece:nth-child(3) { animation-delay: 0.06s; }
-.tray.deal-in .piece:nth-child(4) { animation-delay: 0.08s; }
-.tray.deal-in .piece:nth-child(5) { animation-delay: 0.1s; }
+.piece.reject {
+  animation: tray-reject 0.32s ease;
+}
+@keyframes tray-reject {
+  0% { transform: translateX(-10px) rotate(-5deg); }
+  55% { transform: translateX(5px) rotate(2deg); }
+  100% { transform: none; }
+}
+.spark {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  margin: -2px 0 0 -2px;
+  border-radius: 1px;
+  background: var(--gold);
+  pointer-events: none;
+  z-index: 8;
+  animation: spark-out 0.4s ease forwards;
+}
+@keyframes spark-out {
+  to {
+    transform: translate(var(--sx), var(--sy)) scale(0.2);
+    opacity: 0;
+  }
+}
+.tray .piece { flex: 0 0 auto; }
+.tray.deal-in .piece { animation: deal 0.34s ease backwards; }
 @keyframes deal {
-  from { transform: translateY(12px) scale(0.9); opacity: 0; }
+  from { transform: translateY(14px) scale(0.9); opacity: 0; }
   to { transform: none; opacity: 1; }
 }
 .tray-empty { width: 100%; text-align: center; color: var(--paper-2); font-size: var(--fs-meta); padding-top: 18px; }
@@ -952,7 +985,15 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   align-items: flex-end;
   justify-content: center;
 }
-.overlay.show { display: flex; pointer-events: auto; }
+.overlay.show {
+  display: flex;
+  pointer-events: auto;
+  animation: overlay-in 0.24s ease;
+}
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 .sheet {
   display: none;
   width: 100%;
@@ -983,7 +1024,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   position: relative;
   overflow: hidden;
   text-align: center;
-  background: var(--paper);
+  background: var(--paper) url("../assets/ui/paper.png") center/180px repeat;
   border: 1px solid var(--line);
   box-shadow: var(--shadow-2);
 }
@@ -1009,15 +1050,28 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   font-weight: 700;
 }
 .clear-photo {
-  width: 86px;
-  height: 86px;
+  width: 96px;
+  height: 96px;
   margin: 0 auto 12px;
-  border-radius: 22px;
+  border-radius: 4px;
   background: var(--desk) center/cover no-repeat;
+  border: 8px solid var(--wood-frame);
   box-shadow:
-    0 0 0 3px var(--card),
+    inset 0 0 0 1px var(--wood-in),
     var(--shadow-1);
-  transform: rotate(-4deg);
+}
+.clear-card.grand .clear-photo {
+  width: 112px;
+  height: 112px;
+}
+.clear-card.grand .clear-kicker {
+  letter-spacing: 0.2em;
+}
+.clear-card.grand .btn {
+  animation: screen-in 0.28s ease 0.55s both;
+}
+.clear-card.grand .clear-burst i {
+  animation-duration: 1.15s;
 }
 .clear-gold {
   display: inline-flex;

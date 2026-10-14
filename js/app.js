@@ -466,7 +466,9 @@ function finishPlay() {
     reward.capped ? "已触达今日拼图金币上限" : `今日拼图金币还剩 ${reward.roomLeft}`,
   ].filter(Boolean);
   $("result-photo").style.backgroundImage = play.image.src ? `url("${play.image.src}")` : "";
-  paintClearBurst();
+  const grand = !next;
+  $("sheet-result").classList.toggle("grand", grand);
+  paintClearBurst(grand);
   const nextImg = nextImageAfter(play.image);
   $("result-more").textContent = `拼下一张 · ${nextImg.name}`;
   $("result-more").className = "btn btn-ghost";
@@ -496,23 +498,25 @@ function finishPlay() {
     finishPlay._t = setTimeout(() => shatterIntoNext(), 2000);
   } else {
     play.autoNext = false;
-    $("result-kicker").textContent = "通关";
-    $("result-title").textContent = "这张图拼完了";
-    $("result-desc").textContent = `${play.image.name} · 六关 · ${$("play-time").textContent}`;
+    $("result-kicker").textContent = "六关全通";
+    $("result-title").textContent = "成了";
+    $("result-desc").textContent = `${play.image.name} · 从 16 块拼到 100 块 · ${$("play-time").textContent}`;
     $("result-reward").innerHTML = `<em>+${reward.gain}</em><span>金币</span><small style="display:block;font-weight:400;margin-top:4px">${lines[0] || ""}</small>`;
     $("result-more").className = "btn btn-primary";
     $("result-more").style.marginTop = "0";
     $("result-again").textContent = "从第一关再来";
+    $("result-home").className = "btn btn-ghost";
     openSheet("result", true);
   }
 }
 
-function paintClearBurst() {
+function paintClearBurst(grand) {
   const box = $("result-burst");
   if (!box) return;
-  const colors = ["#ff4b3e", "#ffb020", "#ff7a45", "#ffe08a", "#fff"];
-  box.innerHTML = Array.from({ length: 14 }, (_, i) => {
-    const r = Math.round((360 / 14) * i + (i % 2 ? 8 : -6));
+  const colors = ["#D4A017", "#C45C26", "#F4EFE6", "#3F6B4E"];
+  const n = grand ? 22 : 12;
+  box.innerHTML = Array.from({ length: n }, (_, i) => {
+    const r = Math.round((360 / n) * i + (i % 2 ? 8 : -6));
     return `<i style="--i:${i};--r:${r}deg;--dot:${colors[i % colors.length]}"></i>`;
   }).join("");
 }
